@@ -128,8 +128,49 @@ void tasklet_func(unsigned long data)
             heap_area_size_in_pages);
 
     // Print info about shared libraries
-    unsigned long shared_area_start = target_task->mm->mmap->vm_start;
-    unsigned long shared_area_end = target_task->mm->mmap->vm_end;
+    // find shared libraries
+    struct vm_area_struct* ptr;
+    struct vm_area_struct* init_ptr;
+
+    ptr = target_task->mm->mmap;
+    init_ptr = target_task->mm->mmap;
+
+    int count = 0;
+    int shared_count = 0;
+    unsigned long max_shared_mem = 0;
+    unsigned long min_shared_mem = 0;
+
+    while ((ptr->vm_next != NULL)) {
+        count++;
+        ptr = ptr->vm_next;
+
+        if (ptr->vm_private_data != NULL) {
+            shared_count++;
+            
+            /* printk("%lx ~ %lx", ptr->vm_start, ptr->vm_end); */
+
+            if (ptr->vm_end > max_shared_mem) {
+                max_shared_mem = ptr->vm_end;
+            }
+
+            if (min_shared_mem == 0) {
+                min_shared_mem = ptr->vm_start;
+            } else {
+                if (ptr->vm_start < min_shared_mem) {
+                    min_shared_mem = ptr->vm_start;
+                }
+            }
+        }
+    }
+
+
+/*     printk("mmap count: %d\n", count); */
+/*     printk("shared count: %d\n", shared_count); */
+/*     printk("max_shared_mem: %lx\n", max_shared_mem); */
+/*     printk("min_shared_mem: %lx\n", min_shared_mem); */
+
+    unsigned long shared_area_start = min_shared_mem;
+    unsigned long shared_area_end = max_shared_mem;
     unsigned long shared_area_size = shared_area_end - shared_area_start;
     unsigned long shared_area_size_in_pages = shared_area_size / 4096;
     
