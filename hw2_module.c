@@ -11,8 +11,11 @@
 // Prototypes
 void print_bar(void);
 
+
 // Tasklet Handler
 void tasklet_func(unsigned long data);
+int task_is_kernel_thread(struct task_struct* task);
+int task_is_running_state(struct task_struct* task);
 
 // Utils
 
@@ -21,8 +24,29 @@ void print_bar()
     printk("************************************\n");
 }
 
+// Task Methods
+int task_is_kernel_thread(struct task_struct* task)
+{
+    int is_kernel_thread = 0;
+    if (task->mm == NULL) {
+        is_kernel_thread = 1;
+    }
+
+    return is_kernel_thread;
+}
+
+int task_is_running_state(struct task_struct* task)
+{
+    int is_running_state = 0;
+    if (task->state == TASK_RUNNING) {
+        is_running_state = 1;
+    }
+    return is_running_state;
+}
+
 // Declare Tasklet
 DECLARE_TASKLET_OLD(my_tasklet, tasklet_func);
+
 
 void tasklet_func(unsigned long data)
 {
@@ -30,17 +54,15 @@ void tasklet_func(unsigned long data)
 	struct task_struct *task_iter;
     struct task_struct *target_task;
 	for_each_process(task_iter) {
-        if (task_iter->state == TASK_RUNNING) {
+        int is_kernel_thread = task_is_kernel_thread(task_iter);
+        int is_running_state  = task_is_running_state(task_iter);
+        if (!is_kernel_thread && is_running_state) {
             target_task = task_iter;
             break;
         }
 	}
 
 
-    int is_kernel_thread = 0;
-    if (target_task->mm == NULL) {
-        is_kernel_thread = 1;
-    }
 
     
 
@@ -51,11 +73,18 @@ void tasklet_func(unsigned long data)
 
     print_bar();
 
+    int is_kernel_thread = task_is_kernel_thread(target_task);
     if (is_kernel_thread) {
         printk("This is kernel thread!\n");
         print_bar();
         return;
     }
+    
+    // 1 level paging: PGD INFO
+    print_bar();
+    printk("1 Level Paging: Page Directory Entry Information\n");
+    print_bar();
+    printk("PGD Base Address : 0x%08lx\n", target_task->mm->pgd);
 }
 
 static int __init hw2_init(void)
