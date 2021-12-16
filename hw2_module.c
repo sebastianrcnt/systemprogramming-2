@@ -3,6 +3,7 @@
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/sched/signal.h>
+#include <linux/pgtable.h>
 
 // DATA
 #define STUDENT_NAME "Shiwon Jeong"
@@ -79,12 +80,25 @@ void tasklet_func(unsigned long data)
         print_bar();
         return;
     }
-    
+
+    // Print info about each area
+    unsigned long code_area_start = target_task->mm->start_code;
+    unsigned long code_area_end = target_task->mm->end_code;
+    unsigned long code_area_size = code_area_end - code_area_start;
+    unsigned long code_area_size_in_pages = code_area_size / 4096;
+
+    printk("0x%08lx - 0x%08lx : Code Area, %lu page(s)\n",
+            code_area_start,
+            code_area_end,
+            code_area_size_in_pages);
+
+
     // 1 level paging: PGD INFO
     print_bar();
     printk("1 Level Paging: Page Directory Entry Information\n");
     print_bar();
     printk("PGD Base Address : 0x%08lx\n", target_task->mm->pgd);
+    // printk("code PGD Address : 0x%08lx\n", pgd_offset(target_task->mm));
 }
 
 static int __init hw2_init(void)
