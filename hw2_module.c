@@ -19,7 +19,7 @@ void print_bar(void);
 void tasklet_func(unsigned long data);
 int task_is_kernel_thread(struct task_struct* task);
 int task_is_running_state(struct task_struct* task);
-static int timer_interval = 5 * HZ;
+static int timer_interval = 10 * HZ;
 
 // Utils
 
@@ -54,51 +54,23 @@ int task_is_running_state(struct task_struct* task)
 
 void tasklet_func(unsigned long data)
 {
+
 	// get all tasks
-    struct task_struct *target_task;
     struct task_struct *task_iter;
-    int running_process_count = 0;
-    int total_process_count = 0;
-
-    
-    for_each_process(task_iter) {
-        total_process_count++;
-        int is_running_state = task_is_running_state(task_iter);
-        if (is_running_state) {
-            running_process_count++;
-        }
-    }
-
-    int n;
-    int random_number;
-
-    get_random_bytes(&n, sizeof(int));
-    random_number = n % running_process_count;
-
-    int active_index = 0;
+    struct task_struct *target_task;
 
     for_each_process(task_iter) {
         int is_running_state = task_is_running_state(task_iter);
         if (is_running_state) {
-            active_index++;
-
-            if (active_index == random_number) {
-                target_task = task_iter;
-            }
+            target_task = task_iter;
         }
-    }
-
-    // target_task is needed;
-
-    if (target_task == NULL) {
-        printk("ERROR!\n");
-        return;
     }
 
     printk("Student ID: %s, Name: %s\n", STUDENT_ID, STUDENT_NAME);
     printk("Virtual Memory Address Information\n");
     printk("Process Name: %s\n", target_task->comm);
     printk("Process id: %d\n", target_task->pid);
+
 
     print_bar();
 
