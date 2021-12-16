@@ -3,6 +3,8 @@
 #include <linux/interrupt.h>
 #include <linux/sched/signal.h>
 #include <linux/pgtable.h>
+#include <linux/time.h>
+#include <linux/spinlock.h>
 
 // DATA
 #define STUDENT_NAME "Shiwon Jeong"
