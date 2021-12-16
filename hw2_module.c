@@ -300,7 +300,7 @@ void callback(struct timer_list *timer) {
 
     // start action 
 
-    printk("timer %d", data->value);
+    /* printk("timer %d", data->value); */
     tasklet_schedule(&my_tasklet);
 
 
