@@ -1,6 +1,5 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/sched/signal.h>
 #include <linux/pgtable.h>
@@ -192,13 +191,66 @@ void tasklet_func(unsigned long data)
             stack_area_end,
             stack_area_size_in_pages);
 
+
+    // Start Paging
+
+    pgd_t *base_pgd;
+    pgd_t *pgd;
+    p4d_t *p4d;
+    pud_t *pud;
+    pmd_t *pmd;
+    pte_t *ptep, pte;
+    unsigned long code_vm = code_area_start;
+
+    struct mm_struct *task_mm = target_task->mm;
+
     // 1 level paging: PGD INFO
+    base_pgd = task_mm->pgd;
+    pgd = pgd_offset(task_mm, code_vm);
+    p4d = p4d_offset(pgd, code_vm);
+    pud = pud_offset(p4d, code_vm);
+    pmd = pmd_offset(pud, code_vm);
+    ptep = pte_offset_kernel(pmd, code_vm);
+    pte = *ptep;
+
+
     print_bar();
-    printk("1 Level Paging: Page Directory Entry Information\n");
+    printk("Page Directory Entry Information\n");
     print_bar();
-    printk("PGD Base Address : 0x%08lx\n", target_task->mm->pgd);
-    /* printk("code PGD Address : 0x%08lx\n", pgd_offset(target_task->mm)); */
+    printk("PGD     Base Address        : 0x%08lx\n", (unsigned long) base_pgd);
+    printk("code    PGD Address         : 0x%08lx\n", (unsigned long) pgd);
+    printk("        PGD Value           : 0x%08lx\n", (unsigned long) pgd_val(*pgd));
+    // TODO - add pfn address, page size
+    //
+
+
+
+    // 2 level paging
+    
+    print_bar();
+    printk("Page 4 Directory Entry Information\n");
+    print_bar();
+    printk("code    P4D Address         : 0x%08lx\n", (unsigned long) p4d);
+    printk("        P4D Value           : 0x%08lx\n", (unsigned long) p4d_val(*p4d));
+
+    
+    // pud
+    
+    print_bar();
+    printk("Page Upper Directory Entry Information\n");
+    print_bar();
+    printk("code    PUD Address         : 0x%08lx\n", (unsigned long) pud);
+    printk("        PUD Value           : 0x%08lx\n", (unsigned long) pud_val(*pud));
+
+    // pmd
+    
+    print_bar();
+    printk("Page Middle Directory Entry Information\n");
+    print_bar();
+    printk("code    PMD Address         : 0x%08lx\n", (unsigned long) pmd);
+    printk("        PMD Value           : 0x%08lx\n", (unsigned long) pmd_val(*pmd));
 }
+
 
 static int __init hw2_init(void)
 {
