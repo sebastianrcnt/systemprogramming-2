@@ -81,7 +81,7 @@ void tasklet_func(unsigned long data)
         return;
     }
 
-    // Print info about each area
+    // Print info about code area
     unsigned long code_area_start = target_task->mm->start_code;
     unsigned long code_area_end = target_task->mm->end_code;
     unsigned long code_area_size = code_area_end - code_area_start;
@@ -91,6 +91,18 @@ void tasklet_func(unsigned long data)
             code_area_start,
             code_area_end,
             code_area_size_in_pages);
+
+
+    // Print info about data area
+    unsigned long data_area_start = target_task->mm->start_data;
+    unsigned long data_area_end = target_task->mm->end_data;
+    unsigned long data_area_size = data_area_end - data_area_start;
+    unsigned long data_area_size_in_pages = data_area_size / 4096;
+
+    printk("0x%08lx - 0x%08lx : Data Area, %lu page(s)\n",
+            data_area_start,
+            data_area_end,
+            data_area_size_in_pages);
 
 
     // 1 level paging: PGD INFO
