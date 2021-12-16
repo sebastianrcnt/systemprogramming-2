@@ -16,6 +16,6 @@ static void __exit hello_exit(void)
 module_init(hello_init);
 module_exit(hello_exit);
 
-MODULE_AUTHOR();
-MODULE_DESCRIPTION();
-MODULE_LICENSE();
+MODULE_AUTHOR("Sebastian Jeong");
+MODULE_DESCRIPTION("HW2 Module");
+MODULE_LICENSE("GPL");
