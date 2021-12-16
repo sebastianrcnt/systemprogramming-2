@@ -200,8 +200,9 @@ void tasklet_func(unsigned long data)
     pud_t *pud;
     pmd_t *pmd;
     pte_t *pte;
-    unsigned long code_vm = code_area_start;
+    struct page *target_page;
 
+    unsigned long code_vm = code_area_start;
     struct mm_struct *task_mm = target_task->mm;
 
     // 1 level paging: PGD INFO
@@ -211,6 +212,8 @@ void tasklet_func(unsigned long data)
     pud = pud_offset(p4d, code_vm);
     pmd = pmd_offset(pud, code_vm);
     pte = pte_offset_kernel(pmd, code_vm);
+    target_page = pte_page(*pte);
+
 
 
     print_bar();
@@ -219,7 +222,8 @@ void tasklet_func(unsigned long data)
     printk("PGD     Base Address        : 0x%08lx\n", (unsigned long) base_pgd);
     printk("code    PGD Address         : 0x%08lx\n", (unsigned long) pgd);
     printk("        PGD Value           : 0x%08lx\n", (unsigned long) pgd_val(*pgd));
-    // TODO - add pfn address, page size
+    printk("        +PFN Address        : 0x%08lx\n", (unsigned long) page_to_pfn(pgd_page(*pgd)));
+    printk("        +Page Size          : %s\n", "4KB");
     
 
 
@@ -231,8 +235,7 @@ void tasklet_func(unsigned long data)
     print_bar();
     printk("code    P4D Address         : 0x%08lx\n", (unsigned long) p4d);
     printk("        P4D Value           : 0x%08lx\n", (unsigned long) p4d_val(*p4d));
-
-    
+    printk("        +PFN Address        : 0x%08lx\n", (unsigned long) page_to_pfn(p4d_page(*p4d)));
     // pud
     
     print_bar();
@@ -240,6 +243,7 @@ void tasklet_func(unsigned long data)
     print_bar();
     printk("code    PUD Address         : 0x%08lx\n", (unsigned long) pud);
     printk("        PUD Value           : 0x%08lx\n", (unsigned long) pud_val(*pud));
+    printk("        +PFN Address        : 0x%08lx\n", (unsigned long) page_to_pfn(pud_page(*pud)));
 
     // pmd
     
@@ -248,14 +252,20 @@ void tasklet_func(unsigned long data)
     print_bar();
     printk("code    PMD Address         : 0x%08lx\n", (unsigned long) pmd);
     printk("        PMD Value           : 0x%08lx\n", (unsigned long) pmd_val(*pmd));
+    printk("        +PFN Address        : 0x%08lx\n", (unsigned long) page_to_pfn(pmd_page(*pmd)));
 
     // pte
 
     print_bar();
-    printk("Page Middle Directory Entry Information\n");
+    printk("Page Table Entry Information\n");
     print_bar();
     printk("code    PTE Address         : 0x%08lx\n", (unsigned long) pte);
     printk("        PTE Value           : 0x%08lx\n", (unsigned long) pte_val(*pte));
+    printk("        +Page Base Address  : 0x%08lx\n", (unsigned long) page_to_pfn(pte_page(*pte)));
+
+    print_bar();
+    printk("Start of Physical Address   : 0x%08lx\n", page_to_pfn(pte_page(*pte)) << PAGE_SHIFT);
+    print_bar();
     
 }
 
