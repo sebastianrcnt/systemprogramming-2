@@ -105,6 +105,41 @@ void tasklet_func(unsigned long data)
             data_area_size_in_pages);
 
 
+    // Print info about bss area
+    unsigned long bss_area_start = target_task->mm->end_data;
+    unsigned long bss_area_end = target_task->mm->start_brk;
+    unsigned long bss_area_size = bss_area_end - bss_area_start;
+    unsigned long bss_area_size_in_pages = bss_area_size / 4096;
+
+    printk("0x%08lx - 0x%08lx : BSS Area, %lu page(s)\n",
+            bss_area_start,
+            bss_area_end,
+            bss_area_size_in_pages);
+
+    // Print info about heap area
+    unsigned long heap_area_start = target_task->mm->start_brk;
+    unsigned long heap_area_end = target_task->mm->brk;
+    unsigned long heap_area_size = heap_area_end - heap_area_start;
+    unsigned long heap_area_size_in_pages = heap_area_size / 4096;
+
+    printk("0x%08lx - 0x%08lx : Heap Area, %lu page(s)\n",
+            heap_area_start,
+            heap_area_end,
+            heap_area_size_in_pages);
+
+
+    
+    // Print info about stack area
+    unsigned long stack_area_size = target_task->mm->stack_vm * 4096;
+    unsigned long stack_area_start = target_task->mm->start_stack - stack_area_size;
+    unsigned long stack_area_end = target_task->mm->start_stack;
+    unsigned long stack_area_size_in_pages = target_task->mm->stack_vm;
+
+    printk("0x%08lx - 0x%08lx : Stack Area, %lu page(s)\n",
+            stack_area_start,
+            stack_area_end,
+            stack_area_size_in_pages);
+
     // 1 level paging: PGD INFO
     print_bar();
     printk("1 Level Paging: Page Directory Entry Information\n");
