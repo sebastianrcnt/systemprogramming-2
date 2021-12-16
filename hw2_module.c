@@ -19,7 +19,18 @@ void print_bar(void);
 void tasklet_func(unsigned long data);
 int task_is_kernel_thread(struct task_struct* task);
 int task_is_running_state(struct task_struct* task);
-static int timer_interval = 10 * HZ;
+int get_interval(void);
+
+static int period;
+
+module_param(period, int, 0);
+
+int get_interval() {
+    if (period > 0) {
+        return period * HZ;
+    }
+    return 10 * HZ;
+}
 
 // Utils
 
@@ -298,7 +309,7 @@ void callback(struct timer_list *timer) {
     
     spin_lock(&data->lock);
     if (data->is_active) {
-        mod_timer(timer, jiffies + timer_interval);
+        mod_timer(timer, jiffies + get_interval());
     }
 
     spin_unlock(&data->lock);
@@ -308,13 +319,15 @@ static int __init hw2_init(void)
 {
 	printk("HW2 MODULE INIT START\n");
 
+    // set interval
+
     // init timer
     my_data.is_active = true;
     spin_lock_init(&my_data.lock);
     timer_setup(&my_data.timer, callback, 0);
 
     // register timer
-    mod_timer(&my_data.timer, jiffies + timer_interval);
+    mod_timer(&my_data.timer, jiffies + get_interval());
 
 	printk("HW2 MODULE INIT END");
 	return 0;
