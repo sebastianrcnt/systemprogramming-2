@@ -127,6 +127,17 @@ void tasklet_func(unsigned long data)
             heap_area_end,
             heap_area_size_in_pages);
 
+    // Print info about shared libraries
+    unsigned long shared_area_start = target_task->mm->mmap->vm_start;
+    unsigned long shared_area_end = target_task->mm->mmap->vm_end;
+    unsigned long shared_area_size = shared_area_end - shared_area_start;
+    unsigned long shared_area_size_in_pages = shared_area_size / 4096;
+    
+
+    printk("0x%08lx - 0x%08lx : Shared Area, %lu page(s)\n",
+            shared_area_start,
+            shared_area_end,
+            shared_area_size_in_pages);
 
     
     // Print info about stack area
@@ -145,7 +156,7 @@ void tasklet_func(unsigned long data)
     printk("1 Level Paging: Page Directory Entry Information\n");
     print_bar();
     printk("PGD Base Address : 0x%08lx\n", target_task->mm->pgd);
-    // printk("code PGD Address : 0x%08lx\n", pgd_offset(target_task->mm));
+    /* printk("code PGD Address : 0x%08lx\n", pgd_offset(target_task->mm)); */
 }
 
 static int __init hw2_init(void)
