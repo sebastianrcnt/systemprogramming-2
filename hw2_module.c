@@ -199,7 +199,7 @@ void tasklet_func(unsigned long data)
     p4d_t *p4d;
     pud_t *pud;
     pmd_t *pmd;
-    pte_t *ptep, pte;
+    pte_t *pte;
     unsigned long code_vm = code_area_start;
 
     struct mm_struct *task_mm = target_task->mm;
@@ -210,8 +210,7 @@ void tasklet_func(unsigned long data)
     p4d = p4d_offset(pgd, code_vm);
     pud = pud_offset(p4d, code_vm);
     pmd = pmd_offset(pud, code_vm);
-    ptep = pte_offset_kernel(pmd, code_vm);
-    pte = *ptep;
+    pte = pte_offset_kernel(pmd, code_vm);
 
 
     print_bar();
@@ -221,7 +220,7 @@ void tasklet_func(unsigned long data)
     printk("code    PGD Address         : 0x%08lx\n", (unsigned long) pgd);
     printk("        PGD Value           : 0x%08lx\n", (unsigned long) pgd_val(*pgd));
     // TODO - add pfn address, page size
-    //
+    
 
 
 
@@ -249,6 +248,15 @@ void tasklet_func(unsigned long data)
     print_bar();
     printk("code    PMD Address         : 0x%08lx\n", (unsigned long) pmd);
     printk("        PMD Value           : 0x%08lx\n", (unsigned long) pmd_val(*pmd));
+
+    // pte
+
+    print_bar();
+    printk("Page Middle Directory Entry Information\n");
+    print_bar();
+    printk("code    PTE Address         : 0x%08lx\n", (unsigned long) pte);
+    printk("        PTE Value           : 0x%08lx\n", (unsigned long) pte_val(*pte));
+    
 }
 
 
