@@ -5,6 +5,7 @@
 #include <linux/pgtable.h>
 #include <linux/time.h>
 #include <linux/spinlock.h>
+#include <linux/random.h>
 
 // DATA
 #define STUDENT_NAME "Shiwon Jeong"
@@ -18,6 +19,7 @@ void print_bar(void);
 void tasklet_func(unsigned long data);
 int task_is_kernel_thread(struct task_struct* task);
 int task_is_running_state(struct task_struct* task);
+static int timer_interval = 5 * HZ;
 
 // Utils
 
@@ -47,26 +49,51 @@ int task_is_running_state(struct task_struct* task)
 }
 
 // Declare Tasklet
-DECLARE_TASKLET_OLD(my_tasklet, tasklet_func);
+/* DECLARE_TASKLET_OLD(my_tasklet, tasklet_func); */
 
 
 void tasklet_func(unsigned long data)
 {
 	// get all tasks
-	struct task_struct *task_iter;
     struct task_struct *target_task;
-	for_each_process(task_iter) {
-        int is_kernel_thread = task_is_kernel_thread(task_iter);
-        int is_running_state  = task_is_running_state(task_iter);
-        if (!is_kernel_thread && is_running_state) {
-            target_task = task_iter;
-            break;
-        }
-	}
-
-
+    struct task_struct *task_iter;
+    int running_process_count = 0;
+    int total_process_count = 0;
 
     
+    for_each_process(task_iter) {
+        total_process_count++;
+        int is_running_state = task_is_running_state(task_iter);
+        if (is_running_state) {
+            running_process_count++;
+        }
+    }
+
+    int n;
+    int random_number;
+
+    get_random_bytes(&n, sizeof(int));
+    random_number = n % running_process_count;
+
+    int active_index = 0;
+
+    for_each_process(task_iter) {
+        int is_running_state = task_is_running_state(task_iter);
+        if (is_running_state) {
+            active_index++;
+
+            if (active_index == random_number) {
+                target_task = task_iter;
+            }
+        }
+    }
+
+    // target_task is needed;
+
+    if (target_task == NULL) {
+        printk("ERROR!\n");
+        return;
+    }
 
     printk("Student ID: %s, Name: %s\n", STUDENT_ID, STUDENT_NAME);
     printk("Virtual Memory Address Information\n");
@@ -271,19 +298,65 @@ void tasklet_func(unsigned long data)
     
 }
 
+// Timing
+struct timer_data {
+    int value;
+    spinlock_t lock;
+    struct timer_list timer;
+    bool is_active;
+};
+
+struct timer_data my_data = {}; 
+
+DECLARE_TASKLET_OLD(my_tasklet, tasklet_func);
+
+void callback(struct timer_list *timer) {
+    struct timer_data *data = from_timer(data, timer, timer);
+
+    data->value++;
+
+    // start action 
+
+    printk("timer %d", data->value);
+    tasklet_schedule(&my_tasklet);
+
+
+    // end action
+    
+    
+    spin_lock(&data->lock);
+    if (data->is_active) {
+        mod_timer(timer, jiffies + timer_interval);
+    }
+
+    spin_unlock(&data->lock);
+}
 
 static int __init hw2_init(void)
 {
 	printk("HW2 MODULE INIT START\n");
-	printk("Scheduling Tasklet my_tasklet\n");
-	tasklet_schedule(&my_tasklet);
+
+    // init timer
+    my_data.is_active = true;
+    spin_lock_init(&my_data.lock);
+    timer_setup(&my_data.timer, callback, 0);
+
+    // register timer
+    mod_timer(&my_data.timer, jiffies + timer_interval);
+
 	printk("HW2 MODULE INIT END");
 	return 0;
 }
 
 static void __exit hw2_exit(void)
 {
-	tasklet_kill(&my_tasklet);
+    int r;
+    tasklet_kill(&my_tasklet);
+    spin_lock(&my_data.lock);
+    my_data.is_active = false;
+    r = del_timer(&my_data.timer);
+    spin_unlock(&my_data.lock);
+
 	printk("HW2 EXITED\n");
 }
 
