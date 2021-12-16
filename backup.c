@@ -6,9 +6,9 @@
 // Tasklet Handler
 void tasklet_func(unsigned long data);
 
-DECLARE_TASKLET_OLD(my_tasklet, tasklet_func);
+DECLARE_TASKLET(my_tasklet,tasklet_func);
 
-void tasklet_func(unsigned long data)
+void tasklet_func(unsigned int data)
 {
 	tasklet_disable(&my_tasklet);
 	printk("my_tasklet run: do what the tasklet want to do...\n");
